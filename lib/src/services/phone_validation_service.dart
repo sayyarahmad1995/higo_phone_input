@@ -1,4 +1,3 @@
-
 import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 
 class PhoneValidationResult {
@@ -35,10 +34,7 @@ class PhoneValidationService {
     }
 
     try {
-      final number = PhoneNumber.parse(
-        value,
-        destinationCountry: country,
-      );
+      final number = PhoneNumber.parse(value, destinationCountry: country);
 
       final valid = mobileOnly
           ? number.isValid(type: PhoneNumberType.mobile)
