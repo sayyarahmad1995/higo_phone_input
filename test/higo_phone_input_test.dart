@@ -326,5 +326,117 @@ void main() {
 
       expect(searchField.focusNode?.hasFocus, isTrue);
     });
+
+    testWidgets('Applies custom input appearance', (tester) async {
+      const customTextStyle = TextStyle(fontSize: 19, color: Colors.purple);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HiGoPhoneInput(
+              textStyle: customTextStyle,
+              cursorColor: Colors.orange,
+              decoration: InputDecoration(
+                labelText: 'Mobile number',
+                hintText: 'Your mobile',
+                filled: true,
+                fillColor: Colors.amber,
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('higo_phone_number')),
+      );
+
+      expect(field.style, customTextStyle);
+      expect(field.cursorColor, Colors.orange);
+      expect(field.decoration?.labelText, 'Mobile number');
+      expect(field.decoration?.hintText, 'Your mobile');
+      expect(field.decoration?.filled, true);
+      expect(field.decoration?.fillColor, Colors.amber);
+
+      // Custom decoration must preserve country selection.
+      expect(find.byKey(const Key('higo_country_selector')), findsOneWidget);
+    });
+
+    testWidgets('Applies country selector text style', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HiGoPhoneInput(
+              countrySelectorTextStyle: TextStyle(
+                fontSize: 22,
+                color: Colors.green,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final dialCode = tester.widget<Text>(find.text('+92'));
+
+      expect(dialCode.style?.fontSize, 22);
+      expect(dialCode.style?.color, Colors.green);
+    });
+
+    testWidgets('Can hide the country flag', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: HiGoPhoneInput(showCountryFlag: false)),
+        ),
+      );
+
+      expect(find.text('+92'), findsOneWidget);
+      expect(find.text('🇵🇰'), findsNothing);
+
+      // Selector must remain accessible without the flag.
+      expect(find.byKey(const Key('higo_country_selector')), findsOneWidget);
+    });
+
+    testWidgets('Accepts custom keyboard action', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HiGoPhoneInput(textInputAction: TextInputAction.next),
+          ),
+        ),
+      );
+
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('higo_phone_number')),
+      );
+
+      expect(field.textInputAction, TextInputAction.next);
+    });
+
+    testWidgets('Applies country search decoration', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HiGoPhoneInput(
+              searchBoxDecoration: InputDecoration(
+                hintText: 'Find a country',
+                filled: true,
+                fillColor: Colors.yellow,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('higo_country_selector')));
+      await tester.pumpAndSettle();
+
+      final searchField = tester.widget<TextField>(
+        find.byKey(const Key('higo_country_search')),
+      );
+
+      expect(searchField.decoration?.hintText, 'Find a country');
+      expect(searchField.decoration?.fillColor, Colors.yellow);
+    });
   });
 }

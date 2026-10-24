@@ -14,6 +14,17 @@ class HiGoPhoneInput extends StatefulWidget {
     this.enabled = true,
     this.labelText = 'Phone number',
     this.hintText = 'Enter phone number',
+
+    // Appearance customization
+    this.decoration,
+    this.textStyle,
+    this.countrySelectorTextStyle,
+    this.searchBoxDecoration,
+    this.cursorColor,
+    this.autofocus = false,
+    this.textInputAction = TextInputAction.done,
+    this.showCountryFlag = true,
+
     this.onChanged,
   });
 
@@ -24,6 +35,31 @@ class HiGoPhoneInput extends StatefulWidget {
   final bool enabled;
   final String labelText;
   final String hintText;
+
+  /// Customize the phone input's decoration.
+  /// The integrated country selector is preserved.
+  final InputDecoration? decoration;
+
+  /// Style of the entered phone number.
+  final TextStyle? textStyle;
+
+  /// Style of the country dialing code.
+  final TextStyle? countrySelectorTextStyle;
+
+  /// Decoration of the country search field.
+  final InputDecoration? searchBoxDecoration;
+
+  /// Cursor color of the phone number field.
+  final Color? cursorColor;
+
+  /// Automatically focus the phone number field.
+  final bool autofocus;
+
+  /// Keyboard action, such as done or next.
+  final TextInputAction textInputAction;
+
+  /// Whether to display the selected country's flag.
+  final bool showCountryFlag;
 
   final ValueChanged<PhoneValidationResult>? onChanged;
 
@@ -49,6 +85,7 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
     final selected = await showPhoneCountryBottomSheet(
       context: context,
       selectedCountry: _country,
+      searchBoxDecoration: widget.searchBoxDecoration,
     );
 
     if (!mounted || selected == null || selected == _country) {
@@ -146,62 +183,80 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
     final showError = widget.validateOnChange && _touched && !_result.isValid;
 
+    final selectorTextStyle =
+        widget.countrySelectorTextStyle ?? theme.textTheme.bodyMedium;
+
+    final countrySelector = Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        key: const Key('higo_country_selector'),
+        onTap: widget.enabled ? _openCountrySelector : null,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(4),
+          bottomLeft: Radius.circular(4),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12, right: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.showCountryFlag) ...[
+                Text(country.flag, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                country.dialCode,
+                style: selectorTextStyle?.copyWith(
+                  color: widget.enabled
+                      ? selectorTextStyle.color ?? theme.colorScheme.onSurface
+                      : theme.disabledColor,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.arrow_drop_down,
+                size: 20,
+                color: widget.enabled
+                    ? theme.colorScheme.onSurfaceVariant
+                    : theme.disabledColor,
+              ),
+              const SizedBox(width: 8),
+              Container(width: 1, height: 24, color: theme.dividerColor),
+              const SizedBox(width: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final baseDecoration = widget.decoration ?? const InputDecoration();
+
+    final inputDecoration = baseDecoration.copyWith(
+      labelText: baseDecoration.label == null
+          ? baseDecoration.labelText ?? widget.labelText
+          : null,
+      hintText: baseDecoration.hint == null
+          ? baseDecoration.hintText ?? widget.hintText
+          : null,
+      border: baseDecoration.border ?? const OutlineInputBorder(),
+      errorText: showError
+          ? 'Enter a valid phone number'
+          : baseDecoration.errorText,
+      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+      prefixIcon: countrySelector,
+    );
+
     return TextField(
       key: const Key('higo_phone_number'),
       controller: _controller,
       enabled: widget.enabled,
+      autofocus: widget.autofocus,
       keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.done,
+      textInputAction: widget.textInputAction,
+      style: widget.textStyle,
+      cursorColor: widget.cursorColor,
       autofillHints: const [AutofillHints.telephoneNumber],
-      decoration: InputDecoration(
-        labelText: widget.labelText,
-        hintText: widget.hintText,
-        border: const OutlineInputBorder(),
-        errorText: showError ? 'Enter a valid phone number' : null,
-
-        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-
-        prefixIcon: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            key: const Key('higo_country_selector'),
-            onTap: widget.enabled ? _openCountrySelector : null,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4),
-              bottomLeft: Radius.circular(4),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12, right: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(country.flag, style: const TextStyle(fontSize: 24)),
-                  const SizedBox(width: 6),
-                  Text(
-                    country.dialCode,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: widget.enabled
-                          ? theme.colorScheme.onSurface
-                          : theme.disabledColor,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    size: 20,
-                    color: widget.enabled
-                        ? theme.colorScheme.onSurfaceVariant
-                        : theme.disabledColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Container(width: 1, height: 24, color: theme.dividerColor),
-                  const SizedBox(width: 12),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      decoration: inputDecoration,
       onChanged: _onNumberChanged,
     );
   }

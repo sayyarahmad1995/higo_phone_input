@@ -63,6 +63,7 @@ class PhoneCountries {
 Future<IsoCode?> showPhoneCountryBottomSheet({
   required BuildContext context,
   required IsoCode selectedCountry,
+  InputDecoration? searchBoxDecoration,
 }) {
   return showModalBottomSheet<IsoCode>(
     context: context,
@@ -71,15 +72,22 @@ Future<IsoCode?> showPhoneCountryBottomSheet({
     backgroundColor: Theme.of(context).colorScheme.surface,
     showDragHandle: true,
     builder: (context) {
-      return _CountrySheet(selectedCountry: selectedCountry);
+      return _CountrySheet(
+        selectedCountry: selectedCountry,
+        searchBoxDecoration: searchBoxDecoration,
+      );
     },
   );
 }
 
 class _CountrySheet extends StatefulWidget {
-  const _CountrySheet({required this.selectedCountry});
+  const _CountrySheet({
+    required this.selectedCountry,
+    this.searchBoxDecoration,
+  });
 
   final IsoCode selectedCountry;
+  final InputDecoration? searchBoxDecoration;
 
   @override
   State<_CountrySheet> createState() => _CountrySheetState();
@@ -144,11 +152,19 @@ class _CountrySheetState extends State<_CountrySheet> {
                     focusNode: _searchFocusNode,
                     keyboardType: TextInputType.text,
                     textInputAction: TextInputAction.search,
-                    decoration: const InputDecoration(
-                      hintText: 'Search country or code',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration:
+                        (widget.searchBoxDecoration ?? const InputDecoration())
+                            .copyWith(
+                              hintText:
+                                  widget.searchBoxDecoration?.hintText ??
+                                  'Search country or code',
+                              prefixIcon:
+                                  widget.searchBoxDecoration?.prefixIcon ??
+                                  const Icon(Icons.search),
+                              border:
+                                  widget.searchBoxDecoration?.border ??
+                                  const OutlineInputBorder(),
+                            ),
                     onChanged: (value) {
                       setState(() {
                         _query = value;
