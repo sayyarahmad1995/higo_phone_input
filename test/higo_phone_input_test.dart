@@ -308,5 +308,23 @@ void main() {
       // The country selection sheet must not be visible.
       expect(find.text('Select country'), findsNothing);
     });
+
+    testWidgets('Country selector automatically focuses search', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: HiGoPhoneInput())),
+      );
+
+      await tester.tap(find.byKey(const Key('higo_country_selector')));
+
+      await tester.pumpAndSettle();
+
+      final searchField = tester.widget<TextField>(
+        find.byKey(const Key('higo_country_search')),
+      );
+
+      expect(searchField.focusNode?.hasFocus, isTrue);
+    });
   });
 }

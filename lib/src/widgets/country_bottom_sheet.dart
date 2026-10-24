@@ -87,12 +87,25 @@ class _CountrySheet extends StatefulWidget {
 
 class _CountrySheetState extends State<_CountrySheet> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _searchFocusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -106,75 +119,84 @@ class _CountrySheetState extends State<_CountrySheet> {
           country.dialCode.contains(query);
     }).toList();
 
-    return FractionallySizedBox(
-      heightFactor: 0.78,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select country',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  key: const Key('higo_country_search'),
-                  controller: _searchController,
-                  autofocus: false,
-                  decoration: const InputDecoration(
-                    hintText: 'Search country or code',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.78,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select country',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _query = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: filtered.isEmpty
-                ? const Center(child: Text('No countries found'))
-                : ListView.builder(
-                    key: const Key('higo_country_list'),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final country = filtered[index];
-                      final selected =
-                          country.isoCode == widget.selectedCountry;
-
-                      return ListTile(
-                        key: Key('higo_country_${country.isoCode.name}'),
-                        leading: Text(
-                          country.flag,
-                          style: const TextStyle(fontSize: 25),
-                        ),
-                        title: Text(country.name),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(country.dialCode),
-                            if (selected) ...[
-                              const SizedBox(width: 8),
-                              const Icon(Icons.check),
-                            ],
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pop(country.isoCode);
-                        },
-                      );
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('higo_country_search'),
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.search,
+                    decoration: const InputDecoration(
+                      hintText: 'Search country or code',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _query = value;
+                      });
                     },
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: filtered.isEmpty
+                  ? const Center(child: Text('No countries found'))
+                  : ListView.builder(
+                      key: const Key('higo_country_list'),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final country = filtered[index];
+                        final selected =
+                            country.isoCode == widget.selectedCountry;
+
+                        return ListTile(
+                          key: Key('higo_country_${country.isoCode.name}'),
+                          leading: Text(
+                            country.flag,
+                            style: const TextStyle(fontSize: 25),
+                          ),
+                          title: Text(country.name),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(country.dialCode),
+                              if (selected) ...[
+                                const SizedBox(width: 8),
+                                const Icon(Icons.check),
+                              ],
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop(country.isoCode);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
