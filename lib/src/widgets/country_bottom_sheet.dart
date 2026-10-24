@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 import 'package:phone_numbers_parser/metadata.dart';
+import 'package:locale_names/locale_names.dart';
 
 class PhoneCountry {
   final IsoCode isoCode;
@@ -25,15 +26,15 @@ class PhoneCountry {
 class PhoneCountries {
   PhoneCountries._();
 
-  static const _names = <IsoCode, String>{
-    IsoCode.PK: 'Pakistan',
-    IsoCode.US: 'United States',
-    IsoCode.GB: 'United Kingdom',
-    IsoCode.IN: 'India',
-    IsoCode.AE: 'United Arab Emirates',
-    IsoCode.CA: 'Canada',
-    IsoCode.AU: 'Australia',
-  };
+  static String nameForIso(IsoCode isoCode) {
+    final code = isoCode.name.toUpperCase();
+
+    final locale = Locale.fromSubtags(languageCode: 'en', countryCode: code);
+
+    final name = locale.defaultDisplayCountry;
+
+    return name.isEmpty ? code : name;
+  }
 
   static final List<PhoneCountry> all = () {
     final countries = <PhoneCountry>[];
@@ -45,11 +46,7 @@ class PhoneCountries {
       if (dial.isEmpty) continue;
 
       countries.add(
-        PhoneCountry(
-          isoCode: code,
-          name: _names[code] ?? code.name,
-          dialCode: '+$dial',
-        ),
+        PhoneCountry(isoCode: code, name: nameForIso(code), dialCode: '+$dial'),
       );
     }
 
