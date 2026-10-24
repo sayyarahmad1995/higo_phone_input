@@ -157,7 +157,6 @@ class _CountrySheetState extends State<_CountrySheet> {
                           style: const TextStyle(fontSize: 25),
                         ),
                         title: Text(country.name),
-                        subtitle: Text(country.isoCode.name),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

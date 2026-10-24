@@ -141,73 +141,68 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final country = PhoneCountries.byIso(_country);
+
     final showError = widget.validateOnChange && _touched && !_result.isValid;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                key: const Key('higo_country_selector'),
-                onTap: widget.enabled ? _openCountrySelector : null,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 14,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        PhoneCountries.byIso(_country).flag,
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        PhoneCountries.byIso(_country).dialCode,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 20),
-                    ],
-                  ),
-                ),
-              ),
+    return TextField(
+      key: const Key('higo_phone_number'),
+      controller: _controller,
+      enabled: widget.enabled,
+      keyboardType: TextInputType.phone,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.telephoneNumber],
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        hintText: widget.hintText,
+        border: const OutlineInputBorder(),
+        errorText: showError ? 'Enter a valid phone number' : null,
+
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+
+        prefixIcon: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: const Key('higo_country_selector'),
+            onTap: widget.enabled ? _openCountrySelector : null,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              bottomLeft: Radius.circular(4),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                key: const Key('higo_phone_number'),
-                controller: _controller,
-                enabled: widget.enabled,
-                keyboardType: TextInputType.phone,
-                autofillHints: const [AutofillHints.telephoneNumber],
-                decoration: InputDecoration(
-                  labelText: widget.labelText,
-                  hintText: widget.hintText,
-                  border: const OutlineInputBorder(),
-                  errorText: showError ? 'Enter a valid phone number' : null,
-                ),
-                onChanged: _onNumberChanged,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(country.flag, style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 6),
+                  Text(
+                    country.dialCode,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: widget.enabled
+                          ? theme.colorScheme.onSurface
+                          : theme.disabledColor,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 20,
+                    color: widget.enabled
+                        ? theme.colorScheme.onSurfaceVariant
+                        : theme.disabledColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(width: 1, height: 24, color: theme.dividerColor),
+                  const SizedBox(width: 12),
+                ],
               ),
-            ),
-          ],
-        ),
-        if (_touched && _result.isValid)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _result.e164 ?? '',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
           ),
-      ],
+        ),
+      ),
+      onChanged: _onNumberChanged,
     );
   }
 }

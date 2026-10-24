@@ -288,15 +288,24 @@ void main() {
         const MaterialApp(home: Scaffold(body: HiGoPhoneInput(enabled: false))),
       );
 
-      final field = tester.widget<TextField>(
+      final phoneField = tester.widget<TextField>(
         find.byKey(const Key('higo_phone_number')),
       );
 
-      expect(field.enabled, false);
+      // Phone input must be disabled.
+      expect(phoneField.enabled, false);
 
-      await tester.tap(find.byKey(const Key('higo_country_selector')));
-      await tester.pumpAndSettle();
+      // Country selector must have no action.
+      final selector = tester.widget<InkWell>(
+        find.byKey(const Key('higo_country_selector')),
+      );
 
+      expect(selector.onTap, isNull);
+
+      // Initial country must remain unchanged.
+      expect(find.text('+92'), findsOneWidget);
+
+      // The country selection sheet must not be visible.
       expect(find.text('Select country'), findsNothing);
     });
   });
