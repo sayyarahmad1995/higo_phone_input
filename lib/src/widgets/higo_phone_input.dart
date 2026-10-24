@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 
 import '../services/phone_validation_service.dart';
+import 'country_bottom_sheet.dart';
 
 class HiGoPhoneInput extends StatefulWidget {
   const HiGoPhoneInput({
@@ -42,7 +43,20 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
   // Temporary country list for Phase 2.
   // Phase 3 will support all available countries.
-  static const _countries = [IsoCode.PK, IsoCode.US, IsoCode.GB, IsoCode.IN];
+  Future<void> _openCountrySelector() async {
+    if (!widget.enabled) return;
+
+    final selected = await showPhoneCountryBottomSheet(
+      context: context,
+      selectedCountry: _country,
+    );
+
+    if (!mounted || selected == null || selected == _country) {
+      return;
+    }
+
+    _onCountryChanged(selected);
+  }
 
   @override
   void initState() {
@@ -136,16 +150,35 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButton<IsoCode>(
-              key: const Key('higo_country_selector'),
-              value: _country,
-              items: _countries.map((country) {
-                return DropdownMenuItem(
-                  value: country,
-                  child: Text(country.name),
-                );
-              }).toList(),
-              onChanged: widget.enabled ? _onCountryChanged : null,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: const Key('higo_country_selector'),
+                onTap: widget.enabled ? _openCountrySelector : null,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        PhoneCountries.byIso(_country).flag,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        PhoneCountries.byIso(_country).dialCode,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_drop_down, size: 20),
+                    ],
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
