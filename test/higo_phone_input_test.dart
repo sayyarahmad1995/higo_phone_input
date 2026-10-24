@@ -66,4 +66,39 @@ void main() {
 
     expect(find.text('Enter a valid phone number'), findsOneWidget);
   });
+
+  testWidgets('Preserves selected country after parent rebuild', (
+    tester,
+  ) async {
+    final notifier = ValueNotifier<int>(0);
+    addTearDown(notifier.dispose);
+
+    await tester.pumpWidget(
+      ValueListenableBuilder<int>(
+        valueListenable: notifier,
+        builder: (context, value, child) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [Text('Rebuild: $value'), const HiGoPhoneInput()],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('higo_country_selector')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('US').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('US'), findsOneWidget);
+
+    notifier.value++;
+    await tester.pumpAndSettle();
+
+    expect(find.text('US'), findsOneWidget);
+  });
 }
