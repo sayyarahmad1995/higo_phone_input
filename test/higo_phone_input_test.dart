@@ -348,18 +348,43 @@ void main() {
         ),
       );
 
-      final field = tester.widget<TextField>(
-        find.byKey(const Key('higo_phone_number')),
-      );
+      final fieldFinder = find.byKey(const Key('higo_phone_number'));
 
+      final field = tester.widget<TextField>(fieldFinder);
+
+      // Phone text customization.
       expect(field.style, customTextStyle);
       expect(field.cursorColor, Colors.orange);
-      expect(field.decoration?.labelText, 'Mobile number');
-      expect(field.decoration?.hintText, 'Your mobile');
-      expect(field.decoration?.filled, true);
-      expect(field.decoration?.fillColor, Colors.amber);
 
-      // Custom decoration must preserve country selection.
+      // The outer decorator owns the label and appearance.
+      final outerDecoratorFinder = find.byType(InputDecorator).first;
+
+      final outerDecorator = tester.widget<InputDecorator>(
+        outerDecoratorFinder,
+      );
+
+      expect(
+        find.descendant(
+          of: outerDecoratorFinder,
+          matching: find.text('Mobile number'),
+        ),
+        findsOneWidget,
+      );
+
+      expect(outerDecorator.decoration.filled, isTrue);
+      expect(outerDecorator.decoration.fillColor, Colors.amber);
+
+      expect(outerDecorator.decoration.border, isA<OutlineInputBorder>());
+
+      // The hint appears when the phone field is focused.
+      await tester.tap(fieldFinder);
+      await tester.pumpAndSettle();
+
+      final focusedField = tester.widget<TextField>(fieldFinder);
+
+      expect(focusedField.decoration!.hintText, 'Your mobile');
+
+      // Country selection remains available.
       expect(find.byKey(const Key('higo_country_selector')), findsOneWidget);
     });
 
