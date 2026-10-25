@@ -16,6 +16,7 @@ class HiGoPhoneInput extends StatefulWidget {
     this.hintText = 'Enter phone number',
 
     // Appearance customization
+    this.height,
     this.decoration,
     this.textStyle,
     this.countrySelectorTextStyle,
@@ -36,29 +37,33 @@ class HiGoPhoneInput extends StatefulWidget {
   final String labelText;
   final String hintText;
 
+  /// Optional height of the phone input.
+  ///
+  /// If null, Flutter determines the natural field height.
+  final double? height;
+
   /// Customize the phone input's decoration.
-  /// The integrated country selector is preserved.
   final InputDecoration? decoration;
 
   /// Style of the entered phone number.
   final TextStyle? textStyle;
 
-  /// Style of the country dialing code.
+  /// Style of the dialing prefix.
   final TextStyle? countrySelectorTextStyle;
 
   /// Decoration of the country search field.
   final InputDecoration? searchBoxDecoration;
 
-  /// Cursor color of the phone number field.
+  /// Phone field cursor color.
   final Color? cursorColor;
 
   /// Automatically focus the phone number field.
   final bool autofocus;
 
-  /// Keyboard action, such as done or next.
+  /// Phone keyboard action.
   final TextInputAction textInputAction;
 
-  /// Whether to display the selected country's flag.
+  /// Display the country flag beside the dialing prefix.
   final bool showCountryFlag;
 
   final ValueChanged<PhoneValidationResult>? onChanged;
@@ -161,7 +166,7 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
   }
 
   // ============================================================
-  // Widget updates
+  // Configuration changes
   // ============================================================
 
   @override
@@ -190,7 +195,7 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
   }
 
   // ============================================================
-  // Country selector widget
+  // Country selector
   // ============================================================
 
   Widget _buildCountrySelector(BuildContext context, PhoneCountry country) {
@@ -199,57 +204,74 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
     final selectorTextStyle =
         widget.countrySelectorTextStyle ?? theme.textTheme.bodyMedium;
 
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        key: const Key('higo_country_selector'),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(width: 8),
+        // ------------------------------------------------------
+        // Interactive country selection button
+        // ------------------------------------------------------
+        Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            key: const Key('higo_country_selector'),
 
-        onTap: widget.enabled ? _openCountrySelector : null,
+            onTap: widget.enabled ? _openCountrySelector : null,
 
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(4),
-          bottomLeft: Radius.circular(4),
-        ),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
 
-        child: Padding(
-          padding: const EdgeInsets.only(left: 12, right: 8),
+            // The button sizes naturally according to its
+            // contents. No fixed height is assigned.
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, top: 4, bottom: 4),
 
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.showCountryFlag) ...[
-                Text(country.flag, style: const TextStyle(fontSize: 24)),
-                const SizedBox(width: 6),
-              ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.showCountryFlag) ...[
+                    Text(country.flag, style: const TextStyle(fontSize: 24)),
 
-              Text(
-                country.dialCode,
-                style: selectorTextStyle?.copyWith(
-                  color: widget.enabled
-                      ? selectorTextStyle.color ?? theme.colorScheme.onSurface
-                      : theme.disabledColor,
-                ),
+                    const SizedBox(width: 6),
+                  ],
+
+                  Text(
+                    country.dialCode,
+                    style: selectorTextStyle?.copyWith(
+                      color: widget.enabled
+                          ? selectorTextStyle.color ??
+                                theme.colorScheme.onSurface
+                          : theme.disabledColor,
+                    ),
+                  ),
+
+                  const SizedBox(width: 2),
+
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 20,
+                    color: widget.enabled
+                        ? theme.colorScheme.onSurfaceVariant
+                        : theme.disabledColor,
+                  ),
+                ],
               ),
-
-              const SizedBox(width: 2),
-
-              Icon(
-                Icons.arrow_drop_down,
-                size: 20,
-                color: widget.enabled
-                    ? theme.colorScheme.onSurfaceVariant
-                    : theme.disabledColor,
-              ),
-
-              const SizedBox(width: 8),
-
-              Container(width: 1, height: 24, color: theme.dividerColor),
-
-              const SizedBox(width: 12),
-            ],
+            ),
           ),
         ),
-      ),
+
+        const SizedBox(width: 8),
+
+        // ------------------------------------------------------
+        // Separator
+        // ------------------------------------------------------
+        //
+        // This is deliberately outside the InkWell.
+        // Hover and pressed highlights cannot paint over it.
+        Container(width: 1, height: 24, color: theme.dividerColor),
+
+        // Separation between country button and phone text.
+        const SizedBox(width: 12),
+      ],
     );
   }
 
@@ -280,8 +302,7 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
           ? baseDecoration.hintText ?? widget.hintText
           : null,
 
-      // Flutter controls the complete floating-label
-      // animation and position.
+      // Native Material floating-label behavior.
       floatingLabelBehavior: FloatingLabelBehavior.auto,
 
       floatingLabelAlignment: FloatingLabelAlignment.start,
@@ -292,21 +313,26 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
           ? 'Enter a valid phone number'
           : baseDecoration.errorText,
 
-      // The country selector participates in the
-      // standard TextField decoration layout.
+      // The selector is integrated into the
+      // standard TextField decoration.
       prefix: null,
       prefixIcon: countrySelector,
 
-      // Avoid Flutter's default 48x48 minimum
-      // prefix-icon constraints for this selector.
+      // No enforced minimum size for the prefix widget.
       prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+
+      // Preserve custom padding when supplied.
+      contentPadding: widget.height == null
+          ? baseDecoration.contentPadding
+          : baseDecoration.contentPadding ??
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
 
     // ==========================================================
-    // Standard Material TextField
+    // Phone number TextField
     // ==========================================================
 
-    return TextField(
+    final textField = TextField(
       key: const Key('higo_phone_number'),
 
       controller: _controller,
@@ -317,6 +343,8 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
       keyboardType: TextInputType.phone,
       textInputAction: widget.textInputAction,
 
+      textAlignVertical: TextAlignVertical.center,
+
       style: widget.textStyle,
       cursorColor: widget.cursorColor,
 
@@ -326,5 +354,15 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
       onChanged: _onNumberChanged,
     );
+
+    // ==========================================================
+    // Optional height
+    // ==========================================================
+
+    if (widget.height == null) {
+      return textField;
+    }
+
+    return SizedBox(height: widget.height, child: textField);
   }
 }
