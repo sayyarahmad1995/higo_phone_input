@@ -253,7 +253,7 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
       prefixIcon: countrySelector,
       prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
     );
-    
+
     return TextField(
       key: const Key('higo_phone_number'),
       controller: _controller,
