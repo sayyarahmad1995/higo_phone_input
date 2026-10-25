@@ -11,7 +11,7 @@ The package uses standard Flutter Material widgets, `phone_numbers_parser` for p
 - Country search automatically receives focus when the selector opens; the keyboard stays open while browsing and scrolling.
 - The country list includes keyboard-aware scroll space so the final country can be brought above the keyboard.
 - Pull down from the top of the list to drag the sheet; on release, it closes after a downward pull of at least 20% of its initial height and otherwise returns to expanded height.
-- The phone input label animates from inside the empty, unfocused field to the upper-left outline when focused or populated, and returns when empty and unfocused.
+- The phone input label rests beside the country selector when empty and unfocused, then animates to the upper-left edge of the entire outlined field when focused or populated. It returns beside the selector when empty and unfocused.
 - Country-aware validation, with mobile-number-only validation enabled by default.
 - Normalized E.164 output for valid phone numbers.
 - Optional input decoration, text styles, search-box decoration, cursor color, autofocus, keyboard action, and flag visibility.
@@ -172,7 +172,7 @@ HiGoPhoneInput(
 )
 ```
 
-**Decoration precedence:** `decoration.labelText` and `decoration.hintText` take precedence over the corresponding widget strings; a supplied `label`/`hint` widget also takes precedence. The package installs the country selector as `prefixIcon` (and clears `prefix`), uses `FloatingLabelBehavior.auto` with `FloatingLabelAlignment.start` for the native floating-label animation, and sets the default outline border when no border is supplied. On an invalid, interacted-with input, the package sets `errorText` to `Enter a valid phone number` when `validateOnChange` is true. A custom `decoration.errorText` can still display an error in other states, so generally leave it unset.
+**Decoration precedence:** `decoration.labelText` and `decoration.hintText` take precedence over the corresponding widget strings; a supplied `label`/`hint` widget also takes precedence. The country selector and phone `TextField` are placed together inside an outer `InputDecorator`, which owns the shared outline, floating label, fill and error styling. The label uses `FloatingLabelBehavior.auto` and `FloatingLabelAlignment.start` plus a horizontal transition from the phone-entry area to the wrapper's leading edge. The inner `TextField` manages phone text and the hint. The country selector remains separately tappable, and an outline border is used by default. On an invalid, interacted-with input, the package sets `errorText` to `Enter a valid phone number` when `validateOnChange` is true. A custom `decoration.errorText` can still display an error in other states, so generally leave it unset.
 
 ## Validation result
 
