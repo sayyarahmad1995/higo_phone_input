@@ -238,12 +238,18 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
       hintText: baseDecoration.hint == null
           ? baseDecoration.hintText ?? widget.hintText
           : null,
+
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      floatingLabelAlignment: FloatingLabelAlignment.start,
+
       border: baseDecoration.border ?? const OutlineInputBorder(),
+
       errorText: showError
           ? 'Enter a valid phone number'
           : baseDecoration.errorText,
-      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-      prefixIcon: countrySelector,
+
+      prefixIcon: null,
+      prefix: countrySelector,
     );
 
     return TextField(
