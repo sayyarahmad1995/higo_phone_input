@@ -8,7 +8,10 @@ The package uses standard Flutter Material widgets, `phone_numbers_parser` for p
 
 - A unified phone number field with an integrated country selector, flag, dialing prefix, and dropdown.
 - Searchable country bottom sheet: search by English country name, two-letter ISO code, or dialing prefix.
-- Country search receives focus when the selector opens; dragging the country list dismisses the keyboard.
+- Country search automatically receives focus when the selector opens; the keyboard stays open while browsing and scrolling.
+- The country list includes keyboard-aware scroll space so the final country can be brought above the keyboard.
+- Pull down from the top of the list to drag the sheet; on release, it closes after a downward pull of at least 25% of its initial height and otherwise returns to expanded height.
+- The phone input label remains floating at the leading edge of the field.
 - Country-aware validation, with mobile-number-only validation enabled by default.
 - Normalized E.164 output for valid phone numbers.
 - Optional input decoration, text styles, search-box decoration, cursor color, autofocus, keyboard action, and flag visibility.
@@ -169,7 +172,7 @@ HiGoPhoneInput(
 )
 ```
 
-**Decoration precedence:** `decoration.labelText` and `decoration.hintText` take precedence over the corresponding widget strings; a supplied `label`/`hint` widget also takes precedence. The package overwrites `prefixIcon` with the country selector. It also controls `prefixIconConstraints` and sets the default outline border when no border is supplied. On an invalid, interacted-with input, the package sets `errorText` to `Enter a valid phone number` when `validateOnChange` is true. A custom `decoration.errorText` can still display an error in other states, so generally leave it unset.
+**Decoration precedence:** `decoration.labelText` and `decoration.hintText` take precedence over the corresponding widget strings; a supplied `label`/`hint` widget also takes precedence. The package installs the country selector as `prefix` (and clears `prefixIcon`), keeps the label floating with `FloatingLabelBehavior.always` and `FloatingLabelAlignment.start`, and sets the default outline border when no border is supplied. On an invalid, interacted-with input, the package sets `errorText` to `Enter a valid phone number` when `validateOnChange` is true. A custom `decoration.errorText` can still display an error in other states, so generally leave it unset.
 
 ## Validation result
 
@@ -208,7 +211,9 @@ if (result.isValid) {
 - Opens a searchable modal bottom sheet.
 - Search matches English country names, ISO codes (`PK`, `US`, `GB`) and dialing prefixes (`+92`, `+1`).
 - The search field receives keyboard focus when the sheet opens.
-- Dragging the country list dismisses the keyboard without clearing the search query.
+- Search automatically receives focus and opens the keyboard. Scrolling the list does not unfocus search or automatically dismiss the keyboard.
+- Extra bottom padding inside the country list allows the final country to scroll above the keyboard; the bottom sheet itself does not apply keyboard-inset padding.
+- Dragging down from the top of the list resizes the sheet. On release, a downward pull of at least 25% of its original height dismisses the sheet and keyboard; a shorter pull restores its expanded height. There is no middle snap position.
 - Selecting a country closes the sheet and revalidates the current phone number.
 - Country names fall back to their ISO codes when a display name is unavailable.
 
