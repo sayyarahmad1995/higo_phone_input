@@ -10,7 +10,7 @@ The package uses standard Flutter Material widgets, `phone_numbers_parser` for p
 - Searchable country bottom sheet: search by English country name, two-letter ISO code, or dialing prefix.
 - Country search automatically receives focus when the selector opens; the keyboard stays open while browsing and scrolling.
 - The country list includes keyboard-aware scroll space so the final country can be brought above the keyboard.
-- Pull down from the top of the list to drag the sheet; on release, it closes after a downward pull of at least 25% of its initial height and otherwise returns to expanded height.
+- Pull down from the top of the list to drag the sheet; on release, it closes after a downward pull of at least 20% of its initial height and otherwise returns to expanded height.
 - The phone input label remains floating at the leading edge of the field.
 - Country-aware validation, with mobile-number-only validation enabled by default.
 - Normalized E.164 output for valid phone numbers.
@@ -213,7 +213,7 @@ if (result.isValid) {
 - The search field receives keyboard focus when the sheet opens.
 - Search automatically receives focus and opens the keyboard. Scrolling the list does not unfocus search or automatically dismiss the keyboard.
 - Extra bottom padding inside the country list allows the final country to scroll above the keyboard; the bottom sheet itself does not apply keyboard-inset padding.
-- Dragging down from the top of the list resizes the sheet. On release, a downward pull of at least 25% of its original height dismisses the sheet and keyboard; a shorter pull restores its expanded height. There is no middle snap position.
+- Dragging down from the top of the list resizes the sheet. On release, a downward pull of at least 20% of its original height dismisses the sheet and keyboard; a shorter pull restores its expanded height. There is no middle snap position.
 - Selecting a country closes the sheet and revalidates the current phone number.
 - Country names fall back to their ISO codes when a display name is unavailable.
 
