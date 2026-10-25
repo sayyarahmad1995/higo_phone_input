@@ -72,16 +72,10 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
   late final TextEditingController _controller;
 
-  final FocusNode _phoneFocusNode = FocusNode();
-
-  final GlobalKey _countrySelectorKey = GlobalKey();
-
   late IsoCode _country;
   late PhoneValidationResult _result;
 
   bool _touched = false;
-
-  double _countrySelectorWidth = 0;
 
   // ============================================================
   // Lifecycle
@@ -95,50 +89,13 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
     _controller = TextEditingController(text: widget.initialNumber);
 
-    _phoneFocusNode.addListener(_onPhoneFocusChanged);
-
     _result = _validate();
   }
 
   @override
   void dispose() {
-    _phoneFocusNode.removeListener(_onPhoneFocusChanged);
-    _phoneFocusNode.dispose();
-
     _controller.dispose();
-
     super.dispose();
-  }
-
-  void _onPhoneFocusChanged() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  // ============================================================
-  // Country selector measurement
-  // ============================================================
-
-  void _measureCountrySelector() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      final renderObject = _countrySelectorKey.currentContext
-          ?.findRenderObject();
-
-      if (renderObject is! RenderBox || !renderObject.hasSize) {
-        return;
-      }
-
-      final width = renderObject.size.width;
-
-      if ((width - _countrySelectorWidth).abs() > 0.5) {
-        setState(() {
-          _countrySelectorWidth = width;
-        });
-      }
-    });
   }
 
   // ============================================================
@@ -259,7 +216,6 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
           child: Row(
             mainAxisSize: MainAxisSize.min,
-
             children: [
               if (widget.showCountryFlag) ...[
                 Text(country.flag, style: const TextStyle(fontSize: 24)),
@@ -307,160 +263,68 @@ class _HiGoPhoneInputState extends State<HiGoPhoneInput> {
 
     final baseDecoration = widget.decoration ?? const InputDecoration();
 
-    final hasValue = _controller.text.isNotEmpty;
-
-    final isFloating = _phoneFocusNode.hasFocus || hasValue;
-
     final showError = widget.validateOnChange && _touched && !_result.isValid;
 
-    // ----------------------------------------------------------
-    // Measure country selector
-    // ----------------------------------------------------------
+    final countrySelector = _buildCountrySelector(context, country);
 
-    _measureCountrySelector();
+    // ==========================================================
+    // Input decoration
+    // ==========================================================
 
-    // ----------------------------------------------------------
-    // Animated label
-    // ----------------------------------------------------------
+    final inputDecoration = baseDecoration.copyWith(
+      labelText: baseDecoration.label == null
+          ? baseDecoration.labelText ?? widget.labelText
+          : null,
 
-    final label =
-        baseDecoration.label ??
-        Text(baseDecoration.labelText ?? widget.labelText);
+      hintText: baseDecoration.hint == null
+          ? baseDecoration.hintText ?? widget.hintText
+          : null,
 
-    final animatedLabel = IgnorePointer(
-      child: TweenAnimationBuilder<double>(
-        tween: Tween<double>(end: isFloating ? 0 : _countrySelectorWidth),
-
-        duration: const Duration(milliseconds: 180),
-
-        curve: Curves.easeInOut,
-
-        builder: (context, offset, child) {
-          return Transform.translate(offset: Offset(offset, 0), child: child);
-        },
-
-        child: label,
-      ),
-    );
-
-    // ----------------------------------------------------------
-    // Outer decoration
-    // ----------------------------------------------------------
-
-    final outerDecoration = InputDecoration(
-      label: animatedLabel,
-
-      // Flutter handles the vertical floating animation.
+      // Flutter controls the complete floating-label
+      // animation and position.
       floatingLabelBehavior: FloatingLabelBehavior.auto,
 
       floatingLabelAlignment: FloatingLabelAlignment.start,
 
       border: baseDecoration.border ?? const OutlineInputBorder(),
 
-      enabledBorder: baseDecoration.enabledBorder,
-      focusedBorder: baseDecoration.focusedBorder,
-      disabledBorder: baseDecoration.disabledBorder,
-      errorBorder: baseDecoration.errorBorder,
-      focusedErrorBorder: baseDecoration.focusedErrorBorder,
-
-      filled: baseDecoration.filled,
-      fillColor: baseDecoration.fillColor,
-      focusColor: baseDecoration.focusColor,
-      hoverColor: baseDecoration.hoverColor,
-
-      contentPadding:
-          baseDecoration.contentPadding ??
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-
-      isDense: baseDecoration.isDense,
-      constraints: baseDecoration.constraints,
-
-      helperText: baseDecoration.helperText,
-      helperStyle: baseDecoration.helperStyle,
-
       errorText: showError
           ? 'Enter a valid phone number'
           : baseDecoration.errorText,
 
-      errorStyle: baseDecoration.errorStyle,
+      // The country selector participates in the
+      // standard TextField decoration layout.
+      prefix: null,
+      prefixIcon: countrySelector,
 
-      labelStyle: baseDecoration.labelStyle,
-      floatingLabelStyle: baseDecoration.floatingLabelStyle,
-
-      enabled: widget.enabled,
+      // Avoid Flutter's default 48x48 minimum
+      // prefix-icon constraints for this selector.
+      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
     );
 
-    // ----------------------------------------------------------
-    // Shared input wrapper
-    // ----------------------------------------------------------
+    // ==========================================================
+    // Standard Material TextField
+    // ==========================================================
 
-    return NotificationListener<SizeChangedLayoutNotification>(
-      onNotification: (_) {
-        _measureCountrySelector();
-        return false;
-      },
+    return TextField(
+      key: const Key('higo_phone_number'),
 
-      child: InputDecorator(
-        decoration: outerDecoration,
+      controller: _controller,
 
-        isFocused: _phoneFocusNode.hasFocus,
-        isEmpty: !hasValue,
+      enabled: widget.enabled,
+      autofocus: widget.autofocus,
 
-        child: Row(
-          children: [
-            // --------------------------------------------------
-            // Country selector
-            // --------------------------------------------------
-            SizeChangedLayoutNotifier(
-              child: KeyedSubtree(
-                key: _countrySelectorKey,
+      keyboardType: TextInputType.phone,
+      textInputAction: widget.textInputAction,
 
-                child: _buildCountrySelector(context, country),
-              ),
-            ),
+      style: widget.textStyle,
+      cursorColor: widget.cursorColor,
 
-            // --------------------------------------------------
-            // Phone number field
-            // --------------------------------------------------
-            Expanded(
-              child: TextField(
-                key: const Key('higo_phone_number'),
+      autofillHints: const [AutofillHints.telephoneNumber],
 
-                controller: _controller,
-                focusNode: _phoneFocusNode,
+      decoration: inputDecoration,
 
-                enabled: widget.enabled,
-                autofocus: widget.autofocus,
-
-                keyboardType: TextInputType.phone,
-                textInputAction: widget.textInputAction,
-
-                style: widget.textStyle,
-                cursorColor: widget.cursorColor,
-
-                autofillHints: const [AutofillHints.telephoneNumber],
-
-                // Outer InputDecorator owns the border
-                // and label. Inner TextField owns input.
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isCollapsed: true,
-
-                  hintText: isFloating && baseDecoration.hint == null
-                      ? baseDecoration.hintText ?? widget.hintText
-                      : null,
-
-                  hint: isFloating ? baseDecoration.hint : null,
-
-                  hintStyle: baseDecoration.hintStyle,
-                ),
-
-                onChanged: _onNumberChanged,
-              ),
-            ),
-          ],
-        ),
-      ),
+      onChanged: _onNumberChanged,
     );
   }
 }
